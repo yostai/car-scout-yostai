@@ -1,0 +1,26 @@
+{
+  "searches": [
+    {
+      "make": "honda",
+      "model": "honda-pilot",
+      "display_name": "Honda Pilot",
+      "cargurus_entity_id": "d2331"
+    },
+    {
+      "make": "toyota",
+      "model": "toyota-4runner",
+      "display_name": "Toyota 4Runner",
+      "cargurus_entity_id": "d2086"
+    }
+  ],
+  "year_min": 2015,
+  "mileage_min": 75000,
+  "mileage_max": 110000,
+  "zip": "07840",
+  "radius_miles": 50,
+  "one_owner": true,
+  "no_accidents": true,
+  "notification_email": "",
+  "send_empty_summary": false,
+  "manual_check_notes": "Non-smoking, garage kept, and wealthy-area listings cannot be filtered automatically. Verify these manually when reviewing results."
+}

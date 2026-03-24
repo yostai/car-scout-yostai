@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Car Scout</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #f0f2f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: #1a7a2e;
+      color: #fff;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-title { font-size: 22px; font-weight: 700; }
+    .header-sub { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .last-updated { font-size: 12px; opacity: 0.75; }
+    .btn-admin {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 5px;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-admin:hover { background: rgba(255,255,255,0.3); }
+
+    /* ---- Stats bar ---- */
+    .stats-bar {
+      background: #fff;
+      padding: 12px 24px;
+      display: flex;
+      gap: 24px;
+      border-bottom: 1px solid #e0e0e0;
+      flex-wrap: wrap;
+    }
+    .stat { font-size: 13px; color: #555; }
+    .stat strong { color: #1a7a2e; }
+
+    /* ---- Filter bar ---- */
+    .filter-bar {
+      background: #fff;
+      padding: 10px 24px;
+      display: flex;
+      gap: 12px;
+      border-bottom: 1px solid #e0e0e0;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-bar label { font-size: 13px; color: #555; }
+    .filter-bar select, .filter-bar input {
+      font-size: 13px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 5px 8px;
+    }
+
+    /* ---- Grid ---- */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      padding: 20px 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ---- Card ---- */
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      transition: box-shadow 0.15s;
+    }
+    .card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+    .card-img {
+      width: 100%;
+      height: 190px;
+      object-fit: cover;
+      background: #e8e8e8;
+    }
+    .card-img-placeholder {
+      width: 100%;
+      height: 190px;
+      background: #e8e8e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #aaa;
+      font-size: 13px;
+    }
+    .card-body { padding: 14px; }
+    .card-source {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.35;
+      margin-bottom: 10px;
+      color: #1a1a1a;
+    }
+    .card-stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .card-price { color: #1a7a2e; font-weight: 700; font-size: 15px; }
+    .card-mileage, .card-location { font-size: 13px; color: #666; }
+    .card-note {
+      font-size: 11px;
+      color: #999;
+      font-style: italic;
+      margin-bottom: 12px;
+    }
+    .card-link {
+      display: inline-block;
+      background: #1a7a2e;
+      color: #fff;
+      padding: 7px 16px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .card-link:hover { background: #155e24; }
+    .card-new-badge {
+      display: inline-block;
+      background: #e8f5e9;
+      color: #1a7a2e;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ---- Empty / Loading ---- */
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: #888;
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-text { font-size: 15px; }
+
+    /* ---- Admin Modal ---- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 10px;
+      padding: 28px;
+      width: 420px;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal h2 { font-size: 18px; margin-bottom: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #444; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .form-group input:focus { outline: none; border-color: #1a7a2e; }
+    .btn-save {
+      width: 100%;
+      background: #1a7a2e;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .btn-save:hover { background: #155e24; }
+    .btn-cancel {
+      width: 100%;
+      background: #fff;
+      color: #555;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 9px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .modal-error { color: #c00; font-size: 13px; margin-bottom: 12px; display: none; }
+    .modal-success { color: #1a7a2e; font-size: 13px; margin-bottom: 12px; display: none; }
+
+    @media (max-width: 600px) {
+      .grid { padding: 12px; gap: 12px; }
+      .stats-bar { padding: 10px 12px; }
+      .filter-bar { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========================================================
+  CONFIGURATION — update API_URL with your Lightsail address
+  ======================================================== -->
+<script>
+  const API_URL = 'http://YOUR-LIGHTSAIL-IP:5000';  // ← UPDATE THIS
+</script>
+
+<!-- Header -->
+<div class="header">
+  <div>
+    <div class="header-title">🚗 Car Scout</div>
+    <div class="header-sub">Honda Pilot &amp; Toyota 4Runner &bull; Within 50 miles of Hackettstown, NJ</div>
+  </div>
+  <div class="header-right">
+    <span class="last-updated" id="lastUpdated">Loading...</span>
+    <button class="btn-admin" onclick="openAdmin()">⚙ Settings</button>
+  </div>
+</div>
+
+<!-- Stats bar -->
+<div class="stats-bar">
+  <div class="stat">Total matches: <strong id="statTotal">—</strong></div>
+  <div class="stat">2015+ &bull; 75K–110K mi &bull; No accidents &bull; One owner</div>
+  <div class="stat" style="color:#888;font-size:12px;">⚠️ Verify manually: non-smoking, garage kept, area of listing</div>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+  <label>Sort by:</label>
+  <select id="sortBy" onchange="renderCards()">
+    <option value="newest">Newest first</option>
+    <option value="price_low">Price: low to high</option>
+    <option value="price_high">Price: high to low</option>
+    <option value="mileage_low">Mileage: lowest</option>
+  </select>
+  <label style="margin-left:8px;">Source:</label>
+  <select id="filterSource" onchange="renderCards()">
+    <option value="all">All sites</option>
+    <option value="Cars.com">Cars.com</option>
+    <option value="CarGurus">CarGurus</option>
+  </select>
+</div>
+
+<!-- Listing grid -->
+<div class="grid" id="grid">
+  <div class="empty">
+    <div class="empty-icon">🔍</div>
+    <div class="empty-text">Loading listings...</div>
+  </div>
+</div>
+
+<!-- Admin Modal -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal">
+    <h2>⚙ Car Scout Settings</h2>
+    <div class="modal-error" id="modalError"></div>
+    <div class="modal-success" id="modalSuccess"></div>
+
+    <div id="adminLoginForm">
+      <div class="form-group">
+        <label>Admin Password</label>
+        <input type="password" id="adminPw" placeholder="Enter admin password" />
+      </div>
+      <button class="btn-save" onclick="adminLogin()">Unlock Settings</button>
+      <button class="btn-cancel" onclick="closeAdmin()">Cancel</button>
+    </div>
+
+    <div id="adminSettingsForm" style="display:none;">
+      <div class="form-group">
+        <label>Notification Email</label>
+        <input type="email" id="cfgEmail" placeholder="friend@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Year (minimum)</label>
+        <input type="number" id="cfgYearMin" placeholder="2015" />
+      </div>
+      <div class="form-group">
+        <label>Mileage minimum</label>
+        <input type="number" id="cfgMileMin" placeholder="75000" />
+      </div>
+      <div class="form-group">
+        <label>Mileage maximum</label>
+        <input type="number" id="cfgMileMax" placeholder="110000" />
+      </div>
+      <div class="form-group">
+        <label>ZIP Code</label>
+        <input type="text" id="cfgZip" placeholder="07840" />
+      </div>
+      <div class="form-group">
+        <label>Radius (miles)</label>
+        <input type="number" id="cfgRadius" placeholder="50" />
+      </div>
+      <button class="btn-save" onclick="saveSettings()">Save Settings</button>
+      <button class="btn-cancel" onclick="runNow()" id="btnRunNow" style="margin-top:8px;background:#fff;color:#1a7a2e;border:1px solid #1a7a2e;">
+        🔄 Run Now (fetch latest listings)
+      </button>
+      <button class="btn-cancel" onclick="closeAdmin()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allListings = [];
+  let adminPassword = '';
+
+  // ---- Load listings ----
+  async function loadListings() {
+    try {
+      const res = await fetch(`${API_URL}/api/listings`);
+      const data = await res.json();
+      allListings = data.listings || [];
+
+      document.getElementById('statTotal').textContent = allListings.length;
+
+      const latest = allListings[0];
+      if (latest?.last_seen) {
+        const d = new Date(latest.last_seen + 'Z');
+        document.getElementById('lastUpdated').textContent =
+          'Updated ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } else {
+        document.getElementById('lastUpdated').textContent = '';
+      }
+
+      renderCards();
+    } catch (e) {
+      document.getElementById('grid').innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">⚠️</div>
+          <div class="empty-text">Could not connect to Car Scout backend.<br>
+          <small style="color:#bbb;">Is the server running on Lightsail?</small></div>
+        </div>`;
+    }
+  }
+
+  // ---- Render cards ----
+  function renderCards() {
+    const sortBy = document.getElementById('sortBy').value;
+    const source = document.getElementById('filterSource').value;
+
+    let list = [...allListings];
+
+    if (source !== 'all') {
+      list = list.filter(l => l.source === source);
+    }
+
+    if (sortBy === 'price_low') {
+      list.sort((a, b) => priceNum(a.price) - priceNum(b.price));
+    } else if (sortBy === 'price_high') {
+      list.sort((a, b) => priceNum(b.price) - priceNum(a.price));
+    } else if (sortBy === 'mileage_low') {
+      list.sort((a, b) => (a.mileage || 999999) - (b.mileage || 999999));
+    }
+    // default: newest first (already sorted by DB)
+
+    const grid = document.getElementById('grid');
+    if (!list.length) {
+      grid.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-text">No listings yet.<br>
+          <small style="color:#bbb;">The first email runs at 6am tomorrow.</small></div>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map(l => cardHTML(l)).join('');
+  }
+
+  function priceNum(priceStr) {
+    if (!priceStr) return 999999;
+    return parseInt(priceStr.replace(/,/g, '')) || 999999;
+  }
+
+  function cardHTML(l) {
+    const imgHTML = l.image_url
+      ? `<img class="card-img" src="${escHtml(l.image_url)}" alt="${escHtml(l.title)}" loading="lazy" onerror="this.style.display='none'" />`
+      : `<div class="card-img-placeholder">No photo available</div>`;
+
+    const price = l.price ? `<span class="card-price">$${escHtml(l.price)}</span>` : '';
+    const mileage = l.mileage ? `<span class="card-mileage">${l.mileage.toLocaleString()} mi.</span>` : '';
+    const location = l.location ? `<span class="card-location">📍 ${escHtml(l.location)}</span>` : '';
+    const source = l.source ? `${escHtml(l.source)} &bull; ${escHtml(l.vehicle || '')}` : '';
+
+    // Mark as "new" if first_seen is today
+    let newBadge = '';
+    if (l.first_seen) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (l.first_seen.slice(0, 10) === today) {
+        newBadge = '<span class="card-new-badge">NEW</span>';
+      }
+    }
+
+    return `
+      <div class="card">
+        ${imgHTML}
+        <div class="card-body">
+          <div class="card-source">${source}</div>
+          <div class="card-title">${escHtml(l.title)}${newBadge}</div>
+          <div class="card-stats">${price}${mileage}${location}</div>
+          <div class="card-note">⚠️ Verify: non-smoking, garage kept, area of listing</div>
+          <a class="card-link" href="${escHtml(l.url)}" target="_blank" rel="noopener">View Listing →</a>
+        </div>
+      </div>`;
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ---- Admin ----
+  function openAdmin() {
+    document.getElementById('adminModal').classList.add('active');
+    document.getElementById('adminLoginForm').style.display = 'block';
+    document.getElementById('adminSettingsForm').style.display = 'none';
+    document.getElementById('modalError').style.display = 'none';
+    document.getElementById('modalSuccess').style.display = 'none';
+    document.getElementById('adminPw').value = '';
+  }
+
+  function closeAdmin() {
+    document.getElementById('adminModal').classList.remove('active');
+    adminPassword = '';
+  }
+
+  async function adminLogin() {
+    const pw = document.getElementById('adminPw').value;
+    if (!pw) return;
+    try {
+      const res = await fetch(`${API_URL}/api/config`, {
+        headers: { 'X-Admin-Password': pw }
+      });
+      if (!res.ok) throw new Error('Wrong password');
+      const config = await res.json();
+
+      adminPassword = pw;
+      document.getElementById('adminLoginForm').style.display = 'none';
+      document.getElementById('adminSettingsForm').style.display = 'block';
+
+      document.getElementById('cfgEmail').value = config.notification_email || '';
+      document.getElementById('cfgYearMin').value = config.year_min || '';
+      document.getElementById('cfgMileMin').value = config.mileage_min || '';
+      document.getElementById('cfgMileMax').value = config.mileage_max || '';
+      document.getElementById('cfgZip').value = config.zip || '';
+      document.getElementById('cfgRadius').value = config.radius_miles || '';
+    } catch (e) {
+      const el = document.getElementById('modalError');
+      el.textContent = 'Wrong password. Try again.';
+      el.style.display = 'block';
+    }
+  }
+
+  async function saveSettings() {
+    const payload = {
+      admin_password: adminPassword,
+      notification_email: document.getElementById('cfgEmail').value,
+      year_min: parseInt(document.getElementById('cfgYearMin').value),
+      mileage_min: parseInt(document.getElementById('cfgMileMin').value),
+      mileage_max: parseInt(document.getElementById('cfgMileMax').value),
+      zip: document.getElementById('cfgZip').value,
+      radius_miles: parseInt(document.getElementById('cfgRadius').value),
+    };
+
+    try {
+      const res = await fetch(`${API_URL}/api/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Password': adminPassword
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Save failed');
+      const el = document.getElementById('modalSuccess');
+      el.textContent = 'Settings saved!';
+      el.style.display = 'block';
+      setTimeout(closeAdmin, 1500);
+    } catch (e) {
+      const el = document.getElementById('modalError');
+      el.textContent = 'Could not save settings. Check connection.';
+      el.style.display = 'block';
+    }
+  }
+
+  // Close modal on overlay click
+  document.getElementById('adminModal').addEventListener('click', function(e) {
+    if (e.target === this) closeAdmin();
+  });
+
+  // ---- Run Now ----
+  async function runNow() {
+    const btn = document.getElementById('btnRunNow');
+    btn.textContent = '⏳ Running... (takes ~30 seconds)';
+    btn.disabled = true;
+    try {
+      const res = await fetch(`${API_URL}/api/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPassword },
+        body: JSON.stringify({ admin_password: adminPassword })
+      });
+      if (!res.ok) throw new Error();
+      btn.textContent = '✅ Done — refresh the page in 30 seconds';
+      setTimeout(() => {
+        closeAdmin();
+        loadListings();
+      }, 30000);
+    } catch (e) {
+      btn.textContent = '❌ Failed — check server is running';
+      btn.disabled = false;
+    }
+  }
+
+  // ---- Init ----
+  loadListings();
+</script>
+
+</body>
+</html>
