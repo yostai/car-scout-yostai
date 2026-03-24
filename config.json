@@ -4,13 +4,15 @@
       "make": "honda",
       "model": "honda-pilot",
       "display_name": "Honda Pilot",
-      "cargurus_entity_id": "d2331"
+      "cargurus_entity_id": "d594",
+      "cargurus_make_id": "m6"
     },
     {
       "make": "toyota",
       "model": "toyota-4runner",
       "display_name": "Toyota 4Runner",
-      "cargurus_entity_id": "d2086"
+      "cargurus_entity_id": "d290",
+      "cargurus_make_id": "m7"
     }
   ],
   "year_min": 2015,

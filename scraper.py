@@ -45,15 +45,20 @@ def build_cars_com_url(search, config):
 
 def build_cargurus_url(search, config):
     entity_id = search.get('cargurus_entity_id', '')
-    if not entity_id:
+    make_id = search.get('cargurus_make_id', '')
+    if not entity_id or not make_id:
         return None
+    # makeModelTrimPaths format: "m6/d594,m6" (make/model,make)
+    make_model_path = f"{make_id}%2F{entity_id}%2C{make_id}"
     params = (
         f"zip={config['zip']}"
+        f"&entityId={entity_id}"
+        f"&carType=USED"
+        f"&makeModelTrimPaths={make_model_path}"
         f"&distance={config['radius_miles']}"
         f"&minMileage={config['mileage_min']}"
         f"&maxMileage={config['mileage_max']}"
         f"&minYear={config['year_min']}"
-        f"&entityId={entity_id}"
         f"&sortDir=DESC"
         f"&sortType=LIST_DATE"
     )
@@ -61,7 +66,7 @@ def build_cargurus_url(search, config):
         params += "&hasAccidents=false"
     if config.get('one_owner'):
         params += "&ownerCount=1"
-    return f"https://www.cargurus.com/Cars/inventorylisting/viewDetailsFilterViewInventoryListing.action?{params}"
+    return f"https://www.cargurus.com/search?{params}"
 
 
 # ---------------------------------------------------------------------------
