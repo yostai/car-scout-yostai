@@ -131,47 +131,53 @@ def parse_cars_com(markdown, search):
 
 
 def parse_cargurus(markdown, search):
-    """Parse CarGurus search results markdown into listing dicts."""
+    """Parse CarGurus search results markdown into listing dicts.
+
+    CarGurus renders each listing as one big markdown link block:
+    [![alt](img_url)\\ content \\ specs](listing_url)
+    """
     listings = []
 
-    # CarGurus listings have a heading like: ## [Title](url)
-    heading_re = re.compile(
-        r'## \[(.+?)\]\((https://www\.cargurus\.com/Cars/[^)]+)\)'
+    # Each listing is a link block ending at cargurus.com/details/NNNNN
+    listing_re = re.compile(
+        r'\[!\[([^\]]*)\]\((https://static\.cargurus\.com/[^)]+)\)'
+        r'(.*?)'
+        r'\]\((https://www\.cargurus\.com/details/(\d+)[^)]*)\)',
+        re.DOTALL
     )
 
-    matches = list(heading_re.finditer(markdown))
-    for i, match in enumerate(matches):
-        title = match.group(1)
-        url = match.group(2).split('?')[0]
+    for match in listing_re.finditer(markdown):
+        alt_text = match.group(1)
+        image_url = match.group(2).split('?')[0]
+        content = match.group(3)
+        listing_url = 'https://www.cargurus.com/details/' + match.group(5)
+        listing_id = match.group(5)
 
-        # Extract listing ID from URL
-        id_match = re.search(r'listing=(\d+)', match.group(2))
-        listing_id = id_match.group(1) if id_match else re.sub(r'[^a-z0-9]', '', url[-30:])
+        # Normalize line breaks (CarGurus uses \\ as in-link newlines)
+        content = content.replace('\\\\', '\n').replace('\\', '\n')
 
-        prev_end = matches[i - 1].end() if i > 0 else 0
-        before = markdown[prev_end:match.start()]
-        after = markdown[match.end():match.end() + 600]
+        # Title: first **Bold** text
+        title_match = re.search(r'\*\*(.+?)\*\*', content)
+        title = title_match.group(1) if title_match else alt_text
 
-        price_match = re.search(r'\$([\d,]{4,})', before)
+        # Price: **$XX,XXX**
+        price_match = re.search(r'\*\*\$([\d,]+)\*\*', content)
         price = price_match.group(1) if price_match else None
 
-        mileage_match = re.search(r'([\d,]+)\s+mi', before)
-        mileage = None
-        if mileage_match:
-            mileage = int(mileage_match.group(1).replace(',', ''))
+        # Mileage: "99,492 mi"
+        mileage_match = re.search(r'([\d,]+)\s*mi\b', content)
+        mileage = int(mileage_match.group(1).replace(',', '')) if mileage_match else None
 
-        location_match = re.search(r'([A-Za-z][A-Za-z\s]+,\s*[A-Z]{2})', after)
+        # Location: "City, ST"
+        location_match = re.search(r'([A-Za-z][A-Za-z\s]+,\s*[A-Z]{2})', content)
         location = location_match.group(1).strip() if location_match else None
-
-        img_match = re.search(r'!\[.*?\]\((https://[^)]+(?:jpg|jpeg|png|webp)[^)]*)\)', before)
-        image_url = img_match.group(1) if img_match else None
 
         listings.append({
             'id': f'cargurus_{listing_id}',
             'source': 'CarGurus',
             'vehicle': search['display_name'],
             'title': title,
-            'url': url,
+            'url': listing_url,
             'price': price,
             'mileage': mileage,
             'location': location,
